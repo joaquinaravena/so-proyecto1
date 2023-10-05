@@ -17,6 +17,8 @@ sem_t fila_politicos;  // Semaforo para dar prioridad a los políticos
 sem_t empresa_esperando;  // Semaforo para controlar si hay clientes de tipo empresa esperando
 sem_t comunes_esperando;  // Semaforo para controlar si hay clientes de tipo comun esperando
 sem_t politicos_esperando;  // Semaforo para controlar si hay politicos esperando
+sem_t gente_esperandoEmp; //Semaforo para despertar a los empleados de empresa descansando
+sem_t gente_esperandoCom; //Semaforo para despertar a los empleados de comun descansando
 
 typedef struct {
     int tipo;  // 0 para empresas, 1 para clientes comunes, 2 para políticos
@@ -36,19 +38,23 @@ void* mesa_de_entrada(void* arg) {
         // Determinar el destino del cliente
         if (cliente.tipo == 0) {  // Empresa
             sem_wait(&fila_empresa); //entre a fila empresa
+            printf("%i: Hay un cliente empresa esperando\n", cliente.id);
             sem_post(&cant_entrada);// libero de la entrada
             sem_post(&empresa_esperando);
-            printf("Hay un cliente empresa esperando\n");
+            sem_post(&gente_esperandoEmp);
         } else if (cliente.tipo == 1) {  // Cliente común
             sem_wait(&fila_comunes); //entre a fila comun
+            printf("%i: Hay un cliente comun esperando\n", cliente.id);
             sem_post(&cant_entrada);// libero de la entrada
             sem_post(&comunes_esperando);
-            printf("Hay un cliente comun esperando\n");
+            sem_post(&gente_esperandoCom);
         } else {  // Político
             sem_wait(&fila_politicos); //entre a fila politicos
+            printf("%i: Hay un politico esperando\n", cliente.id);
             sem_post(&cant_entrada);// libero de la entrada
             sem_post(&politicos_esperando);
-            printf("Hay un politico esperando\n");
+            sem_post(&gente_esperandoCom);
+            sem_post(&gente_esperandoEmp);
         }
     } else {
         // El cliente se retira si la mesa de entrada está llena
@@ -59,6 +65,10 @@ void* mesa_de_entrada(void* arg) {
 
 void* empleadoEmpresa(void* arg) {
     while (1) {
+        if(sem_trywait(&gente_esperandoEmp) != 0) {
+            printf("Empleado Empresa descansa\n");
+            sem_wait(&gente_esperandoEmp);
+        }
         if (sem_trywait(&politicos_esperando)  == 0) {
             // Atender a un político
             printf("Político siendo atendido por empleado empresa\n");
@@ -71,16 +81,16 @@ void* empleadoEmpresa(void* arg) {
             sleep(2);
             sem_post(&fila_empresa);
             printf("Empresa termino\n");
-        } else {
-            // No hay clientes, el empleado descansa
-            printf("Empleado Empresa descansa\n");
-            sleep(2); // Simula el tiempo de descanso del empleado
         }
     }
 }
 
 void* empleadoComun(void* arg) {
     while (1) {
+        if(sem_trywait(&gente_esperandoCom) != 0) {
+            printf("Empleado Comun descansa\n");
+            sem_wait(&gente_esperandoCom);
+        }
         if (sem_trywait(&politicos_esperando)  == 0) {
             // Atender a un político
             printf("Político siendo atendido por empleado comun\n");
@@ -93,10 +103,6 @@ void* empleadoComun(void* arg) {
             sleep(2);
             sem_post(&fila_comunes);
             printf("Comunes termino\n");
-        } else {
-            // No hay clientes, el empleado descansa
-            printf("Empleado Comun descansa\n");
-            sleep(2); // Simula el tiempo de descanso del empleado
         }
     }
 }
@@ -116,6 +122,8 @@ int main() {
     sem_init(&empresa_esperando, 0, 0);
     sem_init(&comunes_esperando, 0, 0);
     sem_init(&politicos_esperando, 0, 0);
+    sem_init(&gente_esperandoCom, 0, 0);
+    sem_init(&gente_esperandoEmp, 0, 0);
 
     // Crear hilos para empleados
     for (int i = 0; i < NUM_EMPLEADOS-1; i++) {
@@ -127,7 +135,6 @@ int main() {
     for (int i = 0; i < CANT_CLIENTES; i++) {
         int tipo = rand() % 3; // 0: Empresa, 1: Cliente común, 2: Político
         Cliente cliente = crear_cliente(tipo, i+1);
-        printf("%i: generado tipo %i \n", i+1, tipo);
         pthread_create(&clientes[i], NULL, mesa_de_entrada, &cliente);
         sleep(1); // Simula la llegada de clientes en intervalos aleatorios
     }
@@ -149,5 +156,7 @@ int main() {
     sem_destroy(&empresa_esperando);
     sem_destroy(&comunes_esperando);
     sem_destroy(&politicos_esperando);
+    sem_destroy(&gente_esperandoEmp);
+    sem_destroy(&gente_esperandoCom);
     return 0;
 }
