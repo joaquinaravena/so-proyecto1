@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
+
 // Declarar semáforos
 sem_t semA, semB, semC;
 
@@ -32,20 +32,21 @@ void *printC(void *arg) {
 
 
 int main() {
-pthread_t threadA, threadB, threadC;
-// Inicializar semáforos
-sem_init(&semA, 0, 1);
-sem_init(&semB, 0, 0);
-sem_init(&semC, 0, 0);
+    pthread_t threadA, threadB, threadC;
+    // Inicializar semáforos
+    sem_init(&semA, 0, 1);
+    sem_init(&semB, 0, 0);
+    sem_init(&semC, 0, 0);
 
-// Crear hilos
-pthread_create(&threadA, NULL, printA, NULL);
-pthread_create(&threadB, NULL, printB, NULL);
-pthread_create(&threadC, NULL, printC, NULL);
-// Esperar a que los hilos terminen (esto no sucederá)
-pthread_join(threadA, NULL);
-pthread_join(threadB, NULL);
-pthread_join(threadC, NULL);
-// Nunca llegamos aquí, ya que los hilos se ejecutan en bucle infinito
-return 0;
+    // Crear hilos
+    pthread_create(&threadA, NULL, printA, NULL);
+    pthread_create(&threadB, NULL, printB, NULL);
+    pthread_create(&threadC, NULL, printC, NULL);
+
+    // Esperar a que los hilos terminen
+    pthread_join(threadA, NULL);
+    pthread_join(threadB, NULL);
+    pthread_join(threadC, NULL);
+    // Nunca llegamos aca, ya que los hilos se ejecutan en bucle infinito
+    return 0;
 }

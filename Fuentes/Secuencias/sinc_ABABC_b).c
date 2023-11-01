@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 #define SIZE 1
 
@@ -77,7 +75,7 @@ int main() {
             return -1;
         }
     }
-
+    //Inicializar pipes
     write(pipeA[1], buffer, SIZE);
 
     for (int i = 0; i < 3; i++){

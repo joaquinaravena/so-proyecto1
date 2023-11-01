@@ -43,25 +43,25 @@ void *printD(void *arg) {
 }
 
 int main() {
-pthread_t threadA, threadB, threadC, threadD;
-// Inicializar semáforos
-sem_init(&semA, 0, 1);
-sem_init(&semB, 0, 0);
-sem_init(&semC, 0, 0);
-sem_init(&semD, 0, 0);
+    pthread_t threadA, threadB, threadC, threadD;
+    // Inicializar semáforos
+    sem_init(&semA, 0, 1);
+    sem_init(&semB, 0, 0);
+    sem_init(&semC, 0, 0);
+    sem_init(&semD, 0, 0);
 
-// Crear hilos
-pthread_create(&threadA, NULL, printA, NULL);
-pthread_create(&threadB, NULL, printB, NULL);
-pthread_create(&threadC, NULL, printC, NULL);
-pthread_create(&threadD, NULL, printD, NULL);
+    // Crear hilos
+    pthread_create(&threadA, NULL, printA, NULL);
+    pthread_create(&threadB, NULL, printB, NULL);
+    pthread_create(&threadC, NULL, printC, NULL);
+    pthread_create(&threadD, NULL, printD, NULL);
 
-// Esperar a que los hilos terminen (esto no sucederá)
-pthread_join(threadA, NULL);
-pthread_join(threadB, NULL);
-pthread_join(threadC, NULL);
-pthread_join(threadD, NULL);
+    // Esperar a que los hilos terminen
+    pthread_join(threadA, NULL);
+    pthread_join(threadB, NULL);
+    pthread_join(threadC, NULL);
+    pthread_join(threadD, NULL);
 
-// Nunca llegamos aquí, ya que los hilos se ejecutan en bucle infinito
-return 0;
+    // Nunca llegamos aca, ya que los hilos se ejecutan en bucle infinito
+    return 0;
 }
