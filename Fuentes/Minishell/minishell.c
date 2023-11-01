@@ -20,7 +20,7 @@ typedef struct{
 char *getPath(char cName[], char *path){
     char aux[PATH_LEN];
     strcpy(aux, path);
-    strcat(aux, "/bin/");
+    strcat(aux, "/comms/");
     strcat(aux, cName);
     if(access(aux, F_OK) != -1){
         char * commandName = (char *) malloc(strlen(aux)+1);

@@ -6,7 +6,7 @@ int main(){
 	printf("  rmdir <nombre_directorio> -> Elimina el directorio con el nombre <nombre_directorio>.\n\n");
 	printf("  touch <nombre_archivo> -> Crea un archivo con el nombre <nombre_archivo>.\n\n");
 	printf("  ls <nombre_directorio> -> Lista el contenido del directorio con el nombre <nombre_directorio>.\n\n");
-	printf("  cat <nombre_archivo> -> Muestra el contenido del archivo con el nombre <nombre_archivo>.\n\n");
+	printf("  showcontent <nombre_archivo> -> Muestra el contenido del archivo con el nombre <nombre_archivo>.\n\n");
 	printf("  chmod <nombre_archivo> <permisos> -> Cambia los permisos <permisos> del archivo con el nombre <nombre_archivo>.\n\n");
 	printf("  clear-> Limpia la pantalla de la terminal\n\n");
 	printf("  help-> Muestra ayuda con los comandos posibles\n\n");

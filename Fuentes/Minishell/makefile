@@ -1,17 +1,18 @@
-all: minishell.o bin/cat.o bin/mkdir.o bin/rmdir.o bin/touch.o  bin/chmod.o  bin/clear.o bin/ls.o bin/help.o
+all: minishell.o comms/showcontent.o comms/mkdir.o comms/rmdir.o comms/touch.o  comms/chmod.o  comms/clear.o comms/ls.o comms/help.o
 	gcc minishell.o -o minishell
-	gcc bin/cat.o -o bin/cat
-	gcc bin/touch.o -o bin/touch
-	gcc bin/mkdir.o -o bin/mkdir
-	gcc bin/rmdir.o -o bin/rmdir
-	gcc bin/chmod.o -o bin/chmod
-	gcc bin/clear.o -o bin/clear
-	gcc bin/ls.o -o bin/ls
-	gcc bin/help.o -o bin/help
+	gcc comms/showcontent.o -o comms/showcontent
+	gcc comms/touch.o -o comms/touch
+	gcc comms/mkdir.o -o comms/mkdir
+	gcc comms/rmdir.o -o comms/rmdir
+	gcc comms/chmod.o -o comms/chmod
+	gcc comms/clear.o -o comms/clear
+	gcc comms/ls.o -o comms/ls
+	gcc comms/help.o -o comms/help
+	gcc -c minishell.c -o minishell.o
 minishell.o: minishell.c
 	gcc -c minishell.c -o minishell.o
 clean:
-	rm minishell.o minishell bin/*.o bin/cat bin/chmod bin/touch bin/mkdir bin/rmdir bin/clear bin/ls  bin/help
+	rm minishell.o minishell comms/*.o comms/showcontent comms/chmod comms/touch comms/mkdir comms/rmdir comms/clear comms/ls  comms/help
 run:
 	./minishell
 	
