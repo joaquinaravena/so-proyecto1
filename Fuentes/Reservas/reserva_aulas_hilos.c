@@ -9,6 +9,7 @@
 #define PRIMERA_HORA 9
 #define LIBRE -1
 #define NUM_HILOS 25
+#define TIEMPO_ENTRE_ACCIONES 5
 
 sem_t mutex_tabla;
 sem_t consultantes;
@@ -93,7 +94,7 @@ void * accion_alumnos(void* arg) {
     int index = (int)arg;
     for (int i = 0; i < 4; i++){
         decidir(index);
-        sleep(5);
+        sleep(TIEMPO_ENTRE_ACCIONES);
     }
     return 0;
 }
@@ -112,7 +113,7 @@ int main(){
     //Creacion de hilos
     for (int i = 1; i <= NUM_HILOS; i++){
         pthread_create(&hilos[i-1], NULL, accion_alumnos,(void *)i);
-        sleep(1);
+        usleep(400000);
     }
     //Espero que los hilos terminen
     for (int  i= 0; i < NUM_HILOS; i++){
@@ -123,5 +124,7 @@ int main(){
     sem_destroy(&mutex_tabla);
     sem_destroy(&consultantes);
     sem_destroy(&acceso_consultantes);
+
+    printf("Fin del programa de reservas\n");
     return 0;
 }

@@ -21,6 +21,10 @@ sem_t comunes_esperando;  // Semaforo para controlar si hay clientes de tipo com
 sem_t politicos_esperando;  // Semaforo para controlar si hay politicos esperando
 sem_t gente_esperandoEmp; //Semaforo para despertar a los empleados de empresa descansando
 sem_t gente_esperandoCom; //Semaforo para despertar a los empleados de comun descansando
+sem_t atencion_empresa; //Semaforo para controlar la atencion de las empresas
+sem_t atencion_comunes; //Semaforo para controlar la atencion de los clientes comunes
+sem_t atencion_politicos; //Semaforo para controlar la atencion de los politicos
+sem_t termineAtencion; //Semaforo para controlar que el empleado termine de atender a un cliente
 pthread_mutex_t mutexEntrada; //Mutex para no permitir el acceso concurrente a la mesa de entrada
 pthread_mutex_t mutexAtencion; //Mutex para no permitir el acceso concurrente a los clientes esperando en cada fila
 
@@ -43,6 +47,10 @@ void* mesa_de_entrada(void* arg) {
             sem_post(&cant_entrada);// libero de la entrada
             sem_post(&empresa_esperando);
             sem_post(&gente_esperandoEmp);
+            sem_wait(&atencion_empresa);
+            printf("Empresa %d está siendo atendido\n", cliente->id);
+            sem_wait(&termineAtencion);
+            printf("Empresa %d se retira\n", cliente->id);
         } else if (cliente->tipo == 1) {  // Cliente común
             pthread_mutex_unlock(&mutexEntrada);
             sem_wait(&fila_comunes); //entre a fila comun
@@ -50,6 +58,10 @@ void* mesa_de_entrada(void* arg) {
             sem_post(&cant_entrada);// libero de la entrada
             sem_post(&comunes_esperando);
             sem_post(&gente_esperandoCom);
+            sem_wait(&atencion_comunes);
+            printf("Común %d está siendo atendido\n", cliente->id);
+            sem_wait(&termineAtencion);
+            printf("Común %d se retira\n", cliente->id);
         } else {  // Político
             pthread_mutex_unlock(&mutexEntrada);
             sem_wait(&fila_politicos); //entre a fila politicos
@@ -58,6 +70,10 @@ void* mesa_de_entrada(void* arg) {
             sem_post(&politicos_esperando);
             sem_post(&gente_esperandoCom);
             sem_post(&gente_esperandoEmp);
+            sem_wait(&atencion_politicos);
+            printf("Político %d está siendo atendido\n", cliente->id);
+            sem_wait(&termineAtencion);
+            printf("Político %d se retira\n", cliente->id);
         }
     } else {
         // El cliente se retira si la mesa de entrada está llena
@@ -80,19 +96,19 @@ void* empleadoEmpresa(void* arg) {
 
         if (sem_trywait(&politicos_esperando)  == 0) {
             // Atender a un político
-            printf("Político siendo atendido por empleado empresa\n");
+            sem_post(&atencion_politicos);
             sem_wait(&gente_esperandoCom);
             pthread_mutex_unlock(&mutexAtencion);
             sleep(ESPERA);
             sem_post(&fila_politicos);
-            printf("Político termino\n");
+            sem_post(&termineAtencion);
         } else if (sem_trywait(&empresa_esperando) == 0) {
             // Atender a una empresa
-            printf("Empresa atendiendo\n");
+            sem_post(&atencion_empresa);
             pthread_mutex_unlock(&mutexAtencion);
             sleep(ESPERA);
             sem_post(&fila_empresa);
-            printf("Empresa termino\n");
+            sem_post(&termineAtencion);
         }
     }
 }
@@ -106,19 +122,19 @@ void* empleadoComun(void* arg) {
         pthread_mutex_lock(&mutexAtencion);
         if (sem_trywait(&politicos_esperando)  == 0) {
             // Atender a un político
-            printf("Político siendo atendido por empleado comun\n");
+            sem_post(&atencion_politicos);
             sem_wait(&gente_esperandoEmp);
             pthread_mutex_unlock(&mutexAtencion);
             sleep(ESPERA);
             sem_post(&fila_politicos);
-            printf("Político termino\n");
+            sem_post(&termineAtencion);
         } else if (sem_trywait(&comunes_esperando) == 0) {
             // Atender a un comun
-            printf("Comun atendiendo\n");
+            sem_post(&atencion_comunes);
             pthread_mutex_unlock(&mutexAtencion);
             sleep(ESPERA);
             sem_post(&fila_comunes);
-            printf("Comunes termino\n");
+            sem_post(&termineAtencion);
         }
     }
 }
@@ -150,7 +166,8 @@ int main() {
     for (int i = 0; i < NUM_EMPLEADOS_COM; i++) {
         pthread_create(&empleadoC[i], NULL, empleadoComun, NULL);
     }
-    sleep(ESPERA);
+    //Espero para que termine la creación de los empleados, simplemente para que el modelo inicie con los empleados descansando
+    sleep(2);
     // Crear hilos para clientes
     for (int i = 0; i < CANT_CLIENTES; i++) {
         int tipo = rand() % 3; // 0: Empresa, 1: Cliente común, 2: Político
@@ -158,18 +175,20 @@ int main() {
         cliente->tipo = tipo;
         cliente->id = i + 1;
         pthread_create(&clientes[i], NULL, mesa_de_entrada, cliente);
-        sleep(1); // Simula la llegada de clientes en intervalos
     }
 
     // Esperar a que terminen todos los hilos de empleados y clientes
     for (int i = 0; i < CANT_CLIENTES; i++) {
         pthread_join(clientes[i], NULL);
     }
+
+    //Termino los empleados
+    pthread_mutex_lock(&mutexAtencion);
     for (int i = 0; i < NUM_EMPLEADOS_EMP; i++) {
-        pthread_join(empleadoE[i], NULL);
+        pthread_cancel(empleadoE[i]);
     }
     for (int i = 0; i < NUM_EMPLEADOS_COM; i++) {
-        pthread_join(empleadoC[i], NULL);
+        pthread_cancel(empleadoC[i]);
     }
 
 
@@ -185,6 +204,8 @@ int main() {
     sem_destroy(&gente_esperandoCom);
     pthread_mutex_destroy(&mutexEntrada);
     pthread_mutex_destroy(&mutexAtencion);
+
+    printf("No quedan clientes, cierra el banco\n");
 
     return 0;
 }

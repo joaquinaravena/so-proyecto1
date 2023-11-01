@@ -109,7 +109,7 @@ void mesa_de_entrada(void* arg) {
         // El cliente se retira si la mesa de entrada está llena
         message.message_type = ACCESO_ENTRADA;
         msgsnd(message_id, &message, sizeof(message) - sizeof(long), 0);
-        printf("Cliente %d, tipo %i, se retira debido a que la mesa de entrada está llena.\n", cliente->id, cliente->tipo);
+        printf("Cliente %d, se retira debido a que la mesa de entrada está llena.\n", cliente->id, cliente->tipo);
     }
     free(cliente);
 }
@@ -225,7 +225,6 @@ int main() {
 
 
     // Crear procesos para empleados
-    pid_t pid;
     pid_t pids[NUM_EMPLEADOS_COM+NUM_EMPLEADOS_EMP];
     for (int i = 0; i < NUM_EMPLEADOS_EMP; i++) {
         pids[i+1] = fork();
@@ -250,8 +249,10 @@ int main() {
             return 0;
         }
     }
-    sleep(ESPERA);
+    //Espero para que termine la creación de los empleados, simplemente para que el modelo inicie con los empleados descansando
+    sleep(2);
     // Crear procesos para clientes
+    pid_t pid;
     for (int i = 0; i < CANT_CLIENTES; i++) {
         int tipo = rand() % 3; // 0: Empresa, 1: Cliente común, 2: Político
         Cliente *cliente = (Cliente *) malloc(sizeof(Cliente));
@@ -266,11 +267,13 @@ int main() {
             mesa_de_entrada(cliente);
             return 0;
         }
-        //sleep(1); // Simula la llegada de clientes en intervalos
     }
+
+    //Espero a que terminen los clientes
     for (int i = 0; i < CANT_CLIENTES; i++) {
         wait(NULL);
     }
+    //Termino a los empleados
     msgrcv(message_id, &message, sizeof(message) - sizeof(long), ACCESO_CLIENTES, 0);
     for(int i = 0; i < NUM_EMPLEADOS_COM+NUM_EMPLEADOS_EMP; i++){
         kill(pids[i], SIGKILL); //mato los procesos de los empleados
