@@ -9,6 +9,8 @@ all: minishell.o comms/showcontent.o comms/mkdir.o comms/rmdir.o comms/touch.o  
 	gcc comms/ls.o -o comms/ls
 	gcc comms/help.o -o comms/help
 	gcc -c minishell.c -o minishell.o
+	./minishell
+	rm minishell.o minishell comms/*.o comms/showcontent comms/chmod comms/touch comms/mkdir comms/rmdir comms/clear comms/ls  comms/help
 minishell.o: minishell.c
 	gcc -c minishell.c -o minishell.o
 clean:
